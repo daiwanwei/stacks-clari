@@ -29,3 +29,21 @@ Clarinet.test({
         res.result.expectOk().expectAscii("WC")
     },
 });
+
+Clarinet.test({
+    name: "Ensure that wei coin mint",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const deployer=accounts.get("deployer");
+        if (!deployer) {
+            console.log(`not found deployer`)
+            return
+        }
+        const amount=500
+        const block = chain.mineBlock([
+			Tx.contractCall(contractName, 'mint', [types.uint(amount), types.principal(deployer.address)], deployer.address)
+		]);
+        block.receipts[0].result.expectOk().expectBool(true)
+        const res=await chain.callReadOnlyFn(contractName,"get-balances",[types.principal(deployer.address)],deployer.address)
+        res.result.expectOk().expectUint(500)
+    },
+});

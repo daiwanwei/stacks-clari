@@ -44,3 +44,10 @@
         (ok true)
     )
 )
+
+(define-public (mint (amount uint) (recipient principal)) 
+    (begin 
+        (asserts! (is-eq tx-sender contract-caller) err-owner-only)
+        (ft-mint? wei-coin amount recipient)
+    )
+)

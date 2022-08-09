@@ -13,6 +13,7 @@ path = "contracts/sip/sip010-ft-trait.clar"
 
 [contracts.wei-coin]
 path = "contracts/wei-coin.clar"
+depend_on=["sip010-ft-trait"]
 
 [repl]
 costs_version = 2
