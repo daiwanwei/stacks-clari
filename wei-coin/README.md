@@ -15,6 +15,19 @@ $ clarinet check
 $ clarinet test    
 ```
 
+### deploy & Run in local devnet
+
+```shell
+# create local node  
+$ clarinet integration 
+# create yaml file for deployment 
+$ clarinet deployment generate --devnet  
+# deploy contract to local devnet 
+$ clarinet deployment apply -p <path-to-plan.yaml>
+# run script in devnet
+$ yarn dev:weiCoin     
+```
+
 ### Other
 
 ```shell
