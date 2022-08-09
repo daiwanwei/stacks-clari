@@ -11,15 +11,14 @@
 
 ;; data maps and vars
 ;;
-(define-map allowances { spender: principal , owner: principal} { allowance: uint })
-(define-data-var total-supply uint u0)
+
 ;; private functions
 ;;
 
 ;; public functions
 ;;
 (define-read-only (get-total-supply) 
-    (ok (var-get total-supply))
+    (ok (ft-get-supply wei-coin))
 )
 
 (define-read-only (get-name) (ok "Wei Coin"))
