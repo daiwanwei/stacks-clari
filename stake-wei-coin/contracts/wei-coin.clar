@@ -4,8 +4,8 @@
 
 ;; constants
 ;;
-(define-fungible-token wei-coin u10000000)
-(define-constant contract-owner tx-sender)
+
+(define-fungible-token wei-coin)
 (define-constant err-owner-only (err u101))
 (define-constant err-not-token-owner (err u102))
 
@@ -17,6 +17,7 @@
 
 ;; public functions
 ;;
+
 (define-read-only (get-total-supply) 
     (ok (ft-get-supply wei-coin))
 )
@@ -35,10 +36,6 @@
     (ok (some u"uri"))
 )
 
-(define-read-only (get-tokeni) 
-    (some u"uri")
-)
-
 (define-public (transfer (amount uint) (sender principal) (recipient principal) (memo (optional (buff 34)))) 
     (begin 
         (asserts! (is-eq tx-sender sender) err-owner-only)
@@ -50,7 +47,15 @@
 
 (define-public (mint (amount uint) (recipient principal)) 
     (begin 
-        (asserts! (is-eq tx-sender contract-caller) err-owner-only)
+        (asserts! (is-eq contract-caller .stake-coin-registry) err-owner-only)
         (ft-mint? wei-coin amount recipient)
     )
 )
+
+(define-public (burn (amount uint) (recipient principal)) 
+    (begin 
+        (asserts! (is-eq contract-caller .stake-coin-registry) err-owner-only)
+        (ft-burn? wei-coin amount recipient)
+    )
+)
+
