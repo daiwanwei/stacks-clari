@@ -7,6 +7,12 @@
 
 (define-constant stake-coin .wei-coin)
 (define-constant reward-per-token-per-block u3)
+(define-constant err-invalid-time-interval (err u101))
+(define-constant err-wei-coin-burn (err u102))
+(define-constant err-wei-coin-mint (err u103))
+(define-constant err-receipt-not-found (err u104))
+(define-constant err-stored-reward-not-enough (err u105))
+(define-constant err-invalid-amount-for-unstack (err u106))
 ;; data maps and vars
 ;;
 (define-map stake-receipt-map principal { 
@@ -19,7 +25,7 @@
 ;;
 (define-private (calculate-reward-per-token (start-at uint) (end-at uint)) 
 (begin
-    (asserts! (>= end-at start-at) (err u105))
+    (asserts! (>= end-at start-at) err-invalid-time-interval)
     (ok (* (- end-at start-at) reward-per-token-per-block))
 ))
 
@@ -67,7 +73,7 @@
 (define-public (stake (amount uint) ) 
 (begin 
     (try! (update-reward tx-sender))
-    (unwrap! (contract-call? .wei-coin burn amount tx-sender) (err u101))
+    (unwrap! (contract-call? .wei-coin burn amount tx-sender) err-wei-coin-burn)
     (map-set stake-receipt-map tx-sender {
         amount : amount , update-at : block-height
         })
@@ -79,20 +85,18 @@
 (begin 
     (try! (update-reward tx-sender)) 
     (let (
-        (receipt (unwrap! (map-get? stake-receipt-map tx-sender) (err u102)))
+        (receipt (unwrap! (map-get? stake-receipt-map tx-sender) err-receipt-not-found))
         (stake-amount (get amount receipt) )
     ) 
-    (if (< stake-amount amount) 
-        (err u103) 
-        (begin 
-            (unwrap! (contract-call? .wei-coin mint amount tx-sender) (err u104)) 
-            (if (is-eq stake-amount amount) 
-             (map-delete stake-receipt-map tx-sender)
-             (map-set stake-receipt-map tx-sender {amount : (- stake-amount amount), update-at : block-height} )
-             )
-            (ok true)
-        )
-    ))
+        (asserts! (>= stake-amount amount) err-invalid-amount-for-unstack)
+    
+        (unwrap! (contract-call? .wei-coin mint amount tx-sender) err-wei-coin-mint) 
+        (if (is-eq stake-amount amount) 
+            (map-delete stake-receipt-map tx-sender)
+            (map-set stake-receipt-map tx-sender {amount : (- stake-amount amount), update-at : block-height} )
+            )
+    )
+   (ok true)
     ))
 
 (define-public (claim-reward (amount uint)) 
@@ -100,9 +104,9 @@
     (owner tx-sender)
     (stored-amount (default-to u0 (map-get? reward-map owner)))
     ) 
-    (asserts! (>= stored-amount amount) (err u108))
+    (asserts! (>= stored-amount amount) err-stored-reward-not-enough)
     (map-set reward-map owner (- stored-amount amount))
-    (unwrap! (contract-call? .wei-coin mint amount owner) (err u104))
+    (unwrap! (contract-call? .wei-coin mint amount owner) err-wei-coin-mint)
     (ok true)
     )
 )
